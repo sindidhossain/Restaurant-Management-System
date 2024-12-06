@@ -505,6 +505,7 @@ void displayMenu() {
 
     fclose(file);
 }
+
 void placeOrder() {
     Order orders[MAX_MENU_ITEMS];
     int orderCount = 0;
@@ -554,6 +555,16 @@ void placeOrder() {
     }
 
     if (orderCount > 0) {
+        // Display the ordered items before showing total
+        printf("\nItems in your order:\n");
+        for (int i = 0; i < orderCount; i++) {
+            printf("Item: %s | Quantity: %d | Price per item: %.2f | Total: %.2f\n",
+                orders[i].itemName,
+                orders[i].quantity,
+                orders[i].itemPrice,
+                orders[i].totalCost);
+        }
+
         float grandTotal = 0.0f;
         for (int i = 0; i < orderCount; i++) {
             grandTotal += orders[i].totalCost;
