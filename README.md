@@ -118,7 +118,6 @@ void printBordered(const char *text, const char *color, int width) {
 // Function to display the main menu
 void displayMainMenu() {
     int choice;
-
     do {
         printf("\n");
         printBordered("Welcome to Restaurant Management System", COLOR_GREEN, 80);
@@ -146,12 +145,10 @@ void displayMainMenu() {
         }
     } while (1);
 }
-
 void clearScreen()
 {
     system("cls");
 }
-
 void hidePassword(char *password) {
     int i = 0;
     char ch;
@@ -168,6 +165,7 @@ void hidePassword(char *password) {
     printf("\n");
 }
 
+// Function to login user
 void login() {
     char username[50], password[50];
     clearScreen();
@@ -176,6 +174,15 @@ void login() {
     printf("Enter password: ");
     hidePassword(password);
 
+    // Check if Admin is logging in
+    if (strcmp(username, "Sindid") == 0 && strcmp(password, "123") == 0) {
+        strcpy(loggedInUser, username); // Store logged-in username
+        printf("\nLogin successful! Welcome Sir, %s.\n", loggedInUser);
+        displayAdminMenu();
+        return;
+    }
+
+    // If not Admin, check authentication for Customers/Staff
     if (authenticate(username, password)) {
         strcpy(loggedInUser, username); // Store logged-in username
         printf("\nLogin successful! Welcome, %s.\n", loggedInUser);
@@ -186,9 +193,7 @@ void login() {
         while (fscanf(userFile, "%s %s %s", username, password, role) == 3) {
             if (strcmp(username, loggedInUser) == 0) {
                 fclose(userFile);
-                if (strcmp(role, "Admin") == 0) {
-                    displayAdminMenu();
-                } else if (strcmp(role, "Customer") == 0) {
+                if (strcmp(role, "Customer") == 0) {
                     displayCustomerMenu();
                 } else if (strcmp(role, "Staff") == 0) {
                     displayStaffMenu();
@@ -202,23 +207,35 @@ void login() {
     }
 }
 
-// Function to register a new user
+// Function to register a new user (Customer/Staff)
 void registerUser() {
     char username[50], password[50], role[20];
     clearScreen();
     printf("\nEnter username: ");
     scanf("%s", username);
+
+    // Prevent registration of Admin username
+    if (strcmp(username, "admin") == 0) {
+        printf("\nError: 'admin' is reserved for the Admin and cannot be used.\n");
+        return;
+    }
     printf("Enter password: ");
     hidePassword(password);
-    printf("Enter role (Admin/Customer/Staff): ");
+    printf("Enter role (Customer/Staff): ");
     scanf("%s", role);
 
+    // Validate role
+    if (strcmp(role, "Customer") != 0 && strcmp(role, "Staff") != 0) {
+        printf("\nInvalid role. Please enter either 'Customer' or 'Staff'.\n");
+        return;
+    }
+
+    // Save the new user to the file
     FILE *userFile = fopen(USERS_FILE, "a");
     if (userFile == NULL) {
         printf("Error opening users file.\n");
         return;
     }
-
     fprintf(userFile, "%s %s %s\n", username, password, role);
     fclose(userFile);
 
@@ -233,23 +250,19 @@ bool authenticate(const char username[], const char password[]) {
         printf("Error opening users file.\n");
         return false;
     }
-
     while (fscanf(userFile, "%s %s %s", storedUsername, storedPassword, role) == 3) {
         if (strcmp(storedUsername, username) == 0 && strcmp(storedPassword, password) == 0) {
             fclose(userFile);
             return true;
         }
     }
-
     fclose(userFile);
     return false;
 }
 
-
 // Function to display the admin menu
 void displayAdminMenu() {
     int choice;
-
     do {
         printf("\n");
         printBordered("Admin Menu", COLOR_BLUE, 80);
@@ -263,7 +276,6 @@ void displayAdminMenu() {
         printCentered("Enter your choice: ", COLOR_WHITE);
         scanf("%d", &choice);
         clearScreen();
-
         switch (choice) {
             case 1:
                 addMenuItem();
@@ -292,7 +304,6 @@ void displayAdminMenu() {
 // Function to display the customer menu
 void displayCustomerMenu() {
     int choice;
-
     do {
         printf("\n");
         printBordered("Customer Menu", COLOR_BLUE, 80);
@@ -325,10 +336,8 @@ void displayCustomerMenu() {
         }
     } while (1);
 }
-
 void displayStaffMenu() {
     int choice;
-
     do {
         printf("\n");
         printBordered("Staff Menu", COLOR_BLUE, 80);
@@ -362,7 +371,6 @@ void displayStaffMenu() {
 void addMenuItem() {
     MenuItem item;
     item.id = nextItemId++;
-
     printf("\nEnter item name: ");
     getchar(); // Consume the newline character left by previous input
     fgets(item.name, sizeof(item.name), stdin);
@@ -407,7 +415,6 @@ void removeMenuItem() {
         }
     }
     fclose(menuFile);
-
     if (!found) {
         printf("\nItem with ID %d not found.\n", itemId);
         return;
@@ -419,32 +426,26 @@ void removeMenuItem() {
         printf("Error opening menu file.\n");
         return;
     }
-
     nextItemId = 1; // Reset next available ID
     for (int i = 0; i < itemCount; i++) {
         items[i].id = nextItemId++;
         fprintf(menuFile, "%d|%s|%.2f\n", items[i].id, items[i].name, items[i].price);
     }
     fclose(menuFile);
-
     printf("\nMenu item removed and IDs updated successfully!\n");
 }
-
 
 // Function to update a menu item
 void updateMenuItem() {
     int itemId;
-
     printf("\nEnter the ID of the item to update: ");
     scanf("%d", &itemId);
-
     FILE *file = fopen(MENU_FILE, "r");
     FILE *tempFile = fopen("temp.txt", "w");
     if (file == NULL || tempFile == NULL) {
         printf("Error opening menu file.\n");
         return;
     }
-
     MenuItem item;
     char line[150];
     bool found = false;
@@ -463,7 +464,6 @@ void updateMenuItem() {
     }
     fclose(file);
     fclose(tempFile);
-
     remove(MENU_FILE);
     rename("temp.txt", MENU_FILE);
 
@@ -481,7 +481,6 @@ void displayMenu() {
         printf("Error opening menu file.\n");
         return;
     }
-
     MenuItem item;
     char line[150];
     clearScreen();
@@ -493,26 +492,20 @@ void displayMenu() {
     printf("| %-2s | %-28s |    %-9s |\n", "ID", "Item", "Price");
     printf("+----+------------------------------+--------------+\n");
     printf("%s", COLOR_RESET);
-
     while (fgets(line, sizeof(line), file)) {
         sscanf(line, "%d|%99[^|]|%f", &item.id, item.name, &item.price);
         printf("| %-2d | %-28s | %8.2f TK  |\n", item.id, item.name, item.price);
     }
-
     printf("%s", COLOR_WHITE);
     printf("+----+------------------------------+--------------+\n");
     printf("%s", COLOR_RESET);
-
     fclose(file);
 }
-
 void placeOrder() {
     Order orders[MAX_MENU_ITEMS];
     int orderCount = 0;
-
     while (true) {
         displayMenu(); // Display the menu for easy reference
-
         printf("\nEnter the name of the item (or type 'done' to finish): ");
         getchar(); // Consume the newline character left by previous input
         fgets(orders[orderCount].itemName, sizeof(orders[orderCount].itemName), stdin);
@@ -520,7 +513,6 @@ void placeOrder() {
         if (strcmp(orders[orderCount].itemName, "done") == 0) {
             break;
         }
-
         printf("Enter the quantity: ");
         scanf("%d", &orders[orderCount].quantity);
 
@@ -530,7 +522,6 @@ void placeOrder() {
             printf("Error opening menu file.\n");
             return;
         }
-
         MenuItem item;
         bool found = false;
         char line[150];
@@ -544,16 +535,13 @@ void placeOrder() {
             }
         }
         fclose(menuFile);
-
         if (!found) {
             printf("\nItem not found in menu. Please try again.\n");
             continue; // Allow user to enter another item
         }
-
         printf("\n'%s' added to cart. Quantity: %d\n", orders[orderCount].itemName, orders[orderCount].quantity);
         orderCount++;
     }
-
     if (orderCount > 0) {
         // Display the ordered items before showing total
         printf("\nItems in your order:\n");
@@ -564,22 +552,17 @@ void placeOrder() {
                 orders[i].itemPrice,
                 orders[i].totalCost);
         }
-
         float grandTotal = 0.0f;
         for (int i = 0; i < orderCount; i++) {
             grandTotal += orders[i].totalCost;
         }
-
         printf("\nTotal amount to be paid: Taka %.2f\n", grandTotal);
-
         choosePaymentMethod(orders[0].paymentMethod, grandTotal);
-
         FILE *file = fopen(ORDER_FILE, "a");
         if (file == NULL) {
             printf("Error opening orders file.\n");
             return;
         }
-
         int orderId = nextOrderId(); // Generate unique order ID for the entire order
         for (int i = 0; i < orderCount; i++) {
             orders[i].orderId = orderId;
@@ -587,15 +570,12 @@ void placeOrder() {
             strcpy(orders[i].paymentMethod, orders[0].paymentMethod); // Set payment method for each item
             fprintf(file, "%d|%s|%s|%d|%.2f|%s|%.2f\n", orders[i].orderId, orders[i].customerName, orders[i].itemName, orders[i].quantity, orders[i].itemPrice, orders[i].paymentMethod, orders[i].totalCost);
         }
-
         fclose(file);
-
         generateInvoice(orders, orderCount);
     } else {
         printf("\nNo items ordered.\n");
     }
 }
-
 int nextOrderId() {
     FILE *file = fopen(ORDER_FILE, "r");
     if (file == NULL) {
@@ -618,7 +598,6 @@ void choosePaymentMethod(char paymentMethod[], float grandTotal) {
     int paymentChoice;
     float cashReceived, change;
     char phoneNumber[20];
-
     printf("\nChoose payment method:\n");
     printf("1. Cash\n");
     printf("2. Credit Card\n");
@@ -626,7 +605,6 @@ void choosePaymentMethod(char paymentMethod[], float grandTotal) {
     printf("4. Nagad\n");
     printf("Enter your choice: ");
     scanf("%d", &paymentChoice);
-
     switch (paymentChoice) {
         case 1:
             printf("\nEnter cash received: ");
@@ -672,16 +650,12 @@ void choosePaymentMethod(char paymentMethod[], float grandTotal) {
             exit(0);
     }
 }
-
-
-
 void viewOrderHistory() {
     FILE *file = fopen(ORDER_FILE, "r");
     if (file == NULL) {
         printf("Error opening orders file.\n");
         return;
     }
-
     Order order;
     char line[300];
     printf("\nOrder History:\n");
@@ -691,10 +665,8 @@ void viewOrderHistory() {
         sscanf(line, "%d|%99[^|]|%99[^|]|%d|%f|%19[^|]|%f", &order.orderId, order.customerName, order.itemName, &order.quantity, &order.itemPrice, order.paymentMethod, &order.totalCost);
         printf("%d | %s | %s | %d | %.2f | %s | %.2f\n", order.orderId, order.customerName, order.itemName, order.quantity, order.itemPrice, order.paymentMethod, order.totalCost);
     }
-
     fclose(file);
 }
-
 
 // Function to generate an invoice
 void generateInvoice(Order orders[], int orderCount)
@@ -712,7 +684,6 @@ void generateInvoice(Order orders[], int orderCount)
         printf("| %-2d | %-28s | %-9d | $%-8.2f| $%-11.2f |\n", orders[i].orderId, orders[i].itemName, orders[i].quantity, orders[i].itemPrice, orders[i].totalCost);
         grandTotal += orders[i].totalCost;
     }
-
     printf("%s", COLOR_WHITE);
     printf("+----+------------------------------+-----------+----------+--------------+\n");
     printf("| %-57s| %-10.2f TK|\n", "Total", grandTotal);
